@@ -82,6 +82,7 @@
 #define CC1150_FREQ1_DEFAULT    0xC4
 #define CC1150_FREQ0_DEFAULT    0xEC
 
+typedef void (*voidFuncPtr)(void);
 
 class CC1150
 {
@@ -98,7 +99,8 @@ class CC1150
     
 	// custom commands
     void send_command(unsigned int command);
-    
+	void sendSerialData(byte* data, int numberOfBits, int delay);
+	
     // commands
     void transmit(void);
     void idle(void);
@@ -106,9 +108,24 @@ class CC1150
     void reset(void);
 
   private:  
+	// SPI helper functions
     void waitMiso(void);    
     void select(void);
     void deselect(void);
+	
+	// functions to send serial data
+	void ISR_MISO(void);
+	inline void enableMisoInterrupt(void);
+	void generateFakeInterrupts(void);
+	inline void disableMisoInterrupt(void);
+	
+	// local variables
+	int dataLengthBits;
+	int delayAfterSerialWrite; //wait X microseconds (us) after changing GDO0
+	byte* dataBuffer;		
+	volatile int  dataIndexBits;
+	volatile byte mask;
+	volatile int  bufferIndex;	
 };
 
 #endif //_CC1150_H

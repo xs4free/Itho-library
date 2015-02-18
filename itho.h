@@ -51,16 +51,20 @@
 
 const unsigned int ithoPaTable[8] = {0x6F, 0x26, 0x2E, 0x8C, 0x87, 0xCD, 0xC7, 0xC0};
 
+const int itho_RF_Delay = 75; //microseconds
+const int itho_RF_Full_BitLength = (20 * 8); 
 const byte itho_RF_Full[] = {
   170, 170, 170, 173, 51,  83,  74, 203, 76, 205,
   84,  213,  85,  51, 82, 180, 170, 171, 85, 75 };
 
+const int itho_RFT_Delay = 0; //microseconds
+const int itho_RFT_Full_BitLength = (50 * 8) + 3; // only send the first 3 bits of the last byte (224 = 1110000)
 const byte itho_RFT_Full[] = {
 170, 170, 170, 170, 170, 170, 170, 171, 254,   0, 179,
  42, 171,  42, 149, 154, 102,  89, 154, 165, 169, 169,
 154,  86, 149, 165, 166,  89, 150, 170, 165, 101,  90,
 150,  85, 149, 101,  89, 102,  85, 150, 106, 170, 106,
-172, 170, 170, 170, 170, 170 };
+172, 170, 170, 170, 170, 170, 224 };
 
 class Itho
 {
@@ -69,10 +73,18 @@ class Itho
 	void begin(void);
 	void end(void);
 	
+	void fullSpeed(void);
+	
 	void printRegisters(void);  // print CC1150 register to serial
-
+	
+	// for test-purpose only! Will be made private in final version.
+	void setupRF();
+	void setupRFT();
+	void resetGDO();	
   private:  
 	void printRegister(uint8_t addr, uint8_t registerType, char *name);
+	
+	void setupDefaultIthoRegisters();
 };
 
 #endif //_ITHO_H

@@ -1,4 +1,5 @@
 #include "cc1150.h"
+#include "digitalWriteFast.h"
 
 // Send a strobe command
 void CC1150::send_command(unsigned int command) {
@@ -87,4 +88,101 @@ void CC1150::end(void) {
 
 void CC1150::setup(void) {
 	delay(100); // wait for the CC1150 to power-up (  
+}
+
+// Send out Synchronous Serial data using GDO0
+void CC1150::sendSerialData(byte* data, int numberOfBits, int delay) {
+ 
+  dataIndexBits = 0;
+  mask = 10000000; //reset mask  
+  bufferIndex = 0;  
+  
+  dataLengthBits = numberOfBits;
+  delayAfterSerialWrite = delay;
+  dataBuffer = data;
+  
+  // listen for clock (interrupt) on MISO
+  enableMisoInterrupt();
+ 
+  while(dataIndexBits < dataLengthBits) {
+    // wait for the next interrupt to clock out remaining data
+  }
+
+  disableMisoInterrupt();
+  
+  dataBuffer = NULL;
+}
+
+//https://github.com/GreyGnome/PinChangeInt
+//http://playground.arduino.cc/Main/PinChangeInterrupt
+//http://gammon.com.au/interrupts
+void CC1150::ISR_MISO() {
+ 
+  if (dataIndexBits < dataLengthBits) { // check if there is any more data to send
+  
+    byte bufferValue = dataBuffer[bufferIndex];
+    
+    if (bufferValue & mask) {
+      digitalWriteFast(GDO0, HIGH);
+    }
+    else {
+      digitalWriteFast2(GDO0, LOW);
+    }
+    
+    mask >>= 1; // bitmask trick came from: http://arduino.cc/en/Tutorial/BitMask
+    
+    if (mask == 0)
+    {
+      mask = 10000000; //reset mask
+      bufferIndex++; //goto next byte in the data-array
+    }
+    
+    dataIndexBits++; //increase bits send   
+  }  
+}
+
+void CC1150::enableMisoInterrupt() {
+  pinMode(GDO0, OUTPUT);        // sets the digital pin as output
+  
+  generateFakeInterrupts(); 
+}
+
+void CC1150::generateFakeInterrupts() {
+  int previousMiso = -1;
+  int currentMiso = -1;
+  
+  noInterrupts();
+  
+  ISR_MISO(); //queue the first bit, because the code below waits for the first RISING edge to queue the next
+  
+  do
+  {
+    currentMiso = digitalReadFast2(SPI_MISO);
+    
+    if (currentMiso != previousMiso)
+    {
+      //wait for Miso to be high, then the RISING edge has taken place 
+      //and we can clock in new data
+      if (currentMiso == HIGH) 
+      {
+        if (delayAfterSerialWrite > 0)
+        {
+          // extra delay to make the RISING edge fall nicely in the middle of the data
+          delayMicroseconds(delayAfterSerialWrite);
+        }
+        ISR_MISO();
+      }
+      previousMiso = currentMiso;
+    }
+  }  
+  while(dataIndexBits < dataLengthBits);
+  
+  // wait for the last clock to become high so the last queued bit is also sent
+  while(digitalReadFast2(SPI_MISO) == LOW);  
+  
+  interrupts();
+}
+
+void CC1150::disableMisoInterrupt() {
+  pinMode(GDO0, INPUT);        // sets the digital pin as output
 }

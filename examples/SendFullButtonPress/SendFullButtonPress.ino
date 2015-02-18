@@ -1,4 +1,8 @@
 /*
+This example shows how to send a full-speed command via a CC1150 chip to an Itho ventilation box
+*/
+
+/*
 CC1150 pins    Arduino pins  Description
 1 - GND        GND           Ground
 2 - VCC        VCC           3v3
@@ -19,7 +23,7 @@ https://github.com/cybergibbons/Response_CC1150
 */
 
 #include <SPI.h>
-#include <itho.h>
+#include "itho.h"
 
 Itho itho;
 
@@ -35,12 +39,10 @@ void setup() {
 void loop() {
   Serial.println("sleeping...");  
   delay(5000);
-  
   Serial.println("beginning...");
   itho.begin();
   
-  itho.printRegisters();
+  itho.fullSpeed();
   
   itho.end();
-  Serial.println("end.");
 }
