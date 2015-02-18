@@ -4,7 +4,7 @@ My Arduino Pro Mini running at 8 MHz was not fast enough to handle all the inter
 */
 
 /*
-CC1101 pins    Arduino pins  Description
+CC1150 pins    Arduino pins  Description
 1 - GND        GND           Ground
 2 - VCC        VCC           3v3
 3 - GDO0       Pin  2        Serial data to CC1150
