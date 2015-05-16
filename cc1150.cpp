@@ -107,11 +107,14 @@ void CC1150::sendSerialData(byte* data, int numberOfBits, int delay) {
   while(dataIndexBits < dataLengthBits) {
     // wait for the next interrupt to clock out remaining data
   }
-
+  
   disableMisoInterrupt();
   
   dataBuffer = NULL;
+  
 }
+
+uint8_t currentGDO0;
 
 //https://github.com/GreyGnome/PinChangeInt
 //http://playground.arduino.cc/Main/PinChangeInterrupt
@@ -123,10 +126,16 @@ void CC1150::ISR_MISO() {
     byte bufferValue = dataBuffer[bufferIndex];
     
     if (bufferValue & mask) {
-      digitalWriteFast(GDO0, HIGH);
+	  if (currentGDO0 != HIGH) {
+         digitalWriteFast2(GDO0, HIGH);
+		 currentGDO0 = HIGH;
+	  }
     }
     else {
-      digitalWriteFast2(GDO0, LOW);
+	  if (currentGDO0 != LOW) {
+		digitalWriteFast2(GDO0, LOW);
+		currentGDO0 = LOW;
+	  }
     }
     
     mask >>= 1; // bitmask trick came from: http://arduino.cc/en/Tutorial/BitMask
@@ -143,6 +152,9 @@ void CC1150::ISR_MISO() {
 
 void CC1150::enableMisoInterrupt() {
   pinMode(GDO0, OUTPUT);        // sets the digital pin as output
+  
+  currentGDO0 = LOW;
+  digitalWriteFast2(GDO0, LOW);
   
   generateFakeInterrupts(); 
 }
@@ -179,6 +191,8 @@ void CC1150::generateFakeInterrupts() {
   
   // wait for the last clock to become high so the last queued bit is also sent
   while(digitalReadFast2(SPI_MISO) == LOW);  
+
+  select();  // disable the transmission of new data (caller should issue a command to the CC1150 after transmission of data)
   
   interrupts();
 }

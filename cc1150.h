@@ -21,6 +21,7 @@
 #define CC1150_SYNC0        0x05        // Sync word, low byte
 #define CC1150_PKTLEN       0x06        // Packet length
 #define CC1150_PKTCTRL0     0x08        // Packet automation control
+#define CC1150_ADDR			0x09		// Device address
 #define CC1150_CHANNR       0x0A        // Channel number
 #define CC1150_FREQ2        0x0D        // Frequency control word, high byte
 #define CC1150_FREQ1        0x0E        // Frequency control word, middle byte
