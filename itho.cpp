@@ -353,9 +353,12 @@ void Itho::setPreviousRfCommand(ithoCommand previousCommand, byte* rfCommand)
 			rfCommand[19] = 77; 
 			break;
 		case join:
-		case leave: 
 			rfCommand[18] = 77;
 			rfCommand[19] = 77;
+			break;
+		case leave: //TODO: check if this is correct
+			rfCommand[18] = 82;
+			rfCommand[19] = 171;
 			break;
 		case timer: 
 			rfCommand[18] = 85;
